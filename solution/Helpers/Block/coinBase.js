@@ -24,6 +24,7 @@ function coinBase(witnessTxs) {
   serialize += "0000000000000000"; // Amount 2 -> 8 bytes -> Little Endian
   let script = `6a24aa21a9ed${witnessCommitment(witnessTxs)}`;
   serialize += (script.length / 2).toString(16); // Txout-script length -> 1 byte
+  serialize += script; // script
   // Locktime
   serialize += "0120";
   serialize += (0).toString(16).padStart(64, "0"); // Locktime -> 4 bytes -> Little Endian
