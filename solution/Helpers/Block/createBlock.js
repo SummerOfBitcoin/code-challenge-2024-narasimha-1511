@@ -3,7 +3,7 @@ function createBlock(merkle_root, nonce) {
     Block header -> 80 bytes -> 320 weight units
     
   */
-
+  //  console.log("merkle_root", merkle_root);
   let serialize = "";
   serialize += "11000000"; // Version -> 4 bytes -> Little Endian
   serialize += (0).toString(16).padStart(64, "0"); // Previous Block Hash -> 32 bytes -> Natural byte order
