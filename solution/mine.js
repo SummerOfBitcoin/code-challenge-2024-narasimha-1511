@@ -22,11 +22,11 @@ for (const key in data) {
     txids.push(txid);
   }
 }
-
+let nonce = 0;
 // const merkleRoot = merkle_root(txids);
 const merkleRoot = merkle_root(txids);
 let coinbaseTransacton = coinBase();
-const block = createBlock(merkleRoot);
+let block = createBlock(merkleRoot, nonce);
 const coinBaseTxId = doubleSha256(coinbaseTransacton)
   .match(/../g)
   .reverse()
@@ -37,6 +37,23 @@ const coinBaseTxId = doubleSha256(coinbaseTransacton)
 // 2 Line -> Coinbase Transaction
 // 3 Line -> No of transaction ids
 const txidsa = txids.join("\n");
+let blockHash = doubleSha256(block);
+
+while (
+  parseInt(blockHash) >=
+  parseInt("0000ffff00000000000000000000000000000000000000000000000000000000")
+) {
+  nonce++;
+  console.log(
+    parseInt(blockHash) -
+      parseInt(
+        "0000ffff00000000000000000000000000000000000000000000000000000000"
+      )
+  );
+  console.log("Mining again");
+  block = createBlock(merkleRoot, nonce);
+  blockHash = doubleSha256(block);
+}
 fs.writeFileSync(
   "output.txt",
   block + "\n" + coinbaseTransacton + "\n" + coinBaseTxId + "\n" + txidsa
