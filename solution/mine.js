@@ -49,13 +49,14 @@ for (let i = 0; i < validTransactions.length; i++) {
 let nonce = 0;
 // const merkleRoot = merkle_root(txids);
 let coinbaseTransacton = coinBase();
-let block = createBlock(merkleRoot, nonce);
 const coinBaseTxId = doubleSha256(coinbaseTransacton)
-.match(/../g)
-.reverse()
-.join("");
+  .match(/../g)
+  .reverse()
+  .join("");
 transactions.unshift(coinBaseTxId);
 const merkleRoot = merkle_root(transactions);
+let block = createBlock(merkleRoot, nonce);
+
 //write an output file
 // name: output.txt
 // 1 Line -> Block Header
