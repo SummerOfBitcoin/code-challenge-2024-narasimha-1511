@@ -73,6 +73,7 @@ while (dificulty.compare(Buffer.from(blockHash, "hex")) < 0) {
   block = createBlock(merkleRoot, nonce);
   blockHash = doubleSha256(block).match(/../g).reverse().join("");
 }
+console.log("Done");
 fs.writeFileSync(
   "output.txt",
   block + "\n" + coinbaseTransacton + "\n" + coinBaseTxId + "\n" + txidsa
