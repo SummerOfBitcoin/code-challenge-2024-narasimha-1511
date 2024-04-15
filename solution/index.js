@@ -55,11 +55,8 @@ function readfilesFromFile() {
 
 function readAllFilesGetData(FolderPath) {
   //read the valid transactions from the file if file not present keep it empty
-  const ValidDataPrevious =
-    fs.readFileSync("valid_transactions.txt", "utf8") || "[]";
-
   const files = fs.readdirSync(FolderPath); // Reading all the files
-  let ValidData = JSON.parse(ValidDataPrevious);
+  let ValidData = [];
   let count = 0;
   const startTime = performance.now();
   files.forEach((fileName) => {
