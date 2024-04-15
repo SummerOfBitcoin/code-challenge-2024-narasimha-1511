@@ -31,13 +31,14 @@ for (const key in data) {
   }
 }
 
-let max_weight = 4 * 1000 * 1000;
+let max_weight = 4 * 1000 * 1000 - 320;
 let current_weight = 0;
 let transactions = [];
 let witnessTxs = [];
 for (let i = 0; i < validTransactions.length; i++) {
   // console.log(validTransactions[i]);
   const { complete_weight, tx_type } = calculateWeight(validTransactions[i]);
+  if (tx_type === undefined) continue;
   if (tx_type === "SEGWIT") {
     witnessTxs.push(txids[i]);
   }
@@ -77,10 +78,8 @@ const dificulty = Buffer.from(
   "hex"
 );
 let blockHash = doubleSha256(block).match(/../g).reverse().join("");
-
 while (dificulty.compare(Buffer.from(blockHash, "hex")) < 0) {
   nonce++;
-  // console.log("Mining again");
   block = createBlock(merkleRoot, nonce);
   blockHash = doubleSha256(block).match(/../g).reverse().join("");
 }

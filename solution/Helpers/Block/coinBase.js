@@ -9,7 +9,7 @@ function coinBase(witnessTxs) {
   serialize += "01"; // Number of inputs -> 1 byte
   serialize += (0).toString(16).padStart(64, "0"); // Previous Transaction Hash -> 32 bytes -> Little Endian
   serialize += "ffffffff"; // Previous Txout-index -> 4 bytes -> Little Endian (Max Value)
-  serialize += (37 / 2).toString(16); // Txin-script length -> 1 byte
+  serialize += "25"; // Txin-script length -> 1 byte
   serialize +=
     "246920616d206e61726173696d686120616e64206920616d20736f6c76696e672062697463";
   // the above is the ascii coding of( I am narasimha and i am solving bitc)
@@ -25,7 +25,8 @@ function coinBase(witnessTxs) {
   let script = `6a24aa21a9ed${witnessCommitment(witnessTxs)}`;
   serialize += (script.length / 2).toString(16); // Txout-script length -> 1 byte
   // Locktime
-
+  serialize += "0120";
+  serialize += (0).toString(16).padStart(64, "0"); // Locktime -> 4 bytes -> Little Endian
   serialize += "00000000"; // Locktime -> 4 bytes -> Little Endian
 
   return serialize;
