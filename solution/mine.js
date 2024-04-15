@@ -61,11 +61,14 @@ const coinBaseTxId = doubleSha256(coinbaseTransacton)
 // 2 Line -> Coinbase Transaction
 // 3 Line -> No of transaction ids
 const txidsa = txids.join("\n");
+const dificulty = Buffer.from(
+  "0000ffff00000000000000000000000000000000000000000000000000000000",
+  "hex"
+);
 let blockHash = doubleSha256(block).match(/../g).reverse().join("");
 
-while (parseInt(blockHash) >= parseInt("0000ffff")) {
+while (dificulty.compare(Buffer.from(blockHash, "hex")) < 0) {
   nonce++;
-  console.log(parseInt(blockHash) - parseInt("0000ffff"));
   console.log("Mining again");
   block = createBlock(merkleRoot, nonce);
   blockHash = doubleSha256(block).match(/../g).reverse().join("");
