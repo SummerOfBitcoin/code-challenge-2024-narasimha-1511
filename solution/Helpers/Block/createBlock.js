@@ -1,6 +1,4 @@
 function createBlock(merkle_root, nonce) {
-  const max_weight = 4 * 1000 * 1000;
-
   /* 
     Block header -> 80 bytes -> 320 weight units
     

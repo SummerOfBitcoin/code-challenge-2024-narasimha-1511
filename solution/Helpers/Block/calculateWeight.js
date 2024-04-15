@@ -1,6 +1,13 @@
 function calculateWeight(tx) {
   //here i will calculate the weight of the trasnsaction
-  let tx_type = tx.vin.every((vin) => "scriptsig" in vin) ? "LEGACY" : "SEGWIT";
+
+  //check if the transaction is segwit or not
+  let tx_type = "LEGACY";
+
+  if (tx.vin.some((e) => e.scriptsig === "")) {
+    tx_type = "SEGWIT";
+  }
+
   //determining the type of the transaction
 
   let tx_weight = 0;
@@ -12,7 +19,7 @@ function calculateWeight(tx) {
 
     if (tx.vin.length >= 50) {
       //input count -> in bytes
-      throw new Error("Too many inputs");
+      return false;
     }
     //input count -> in bytes
     tx_weight += 1;
@@ -22,14 +29,15 @@ function calculateWeight(tx) {
       tx_weight += 32; //txid -> in bytes
       tx_weight += 4; //vout -> in bytes
       tx_weight += 1; //scriptSig length -> in bytes
-      const scriptSig = Buffer.form(e.scriptSig, "hex");
+      // console.log("sig sc" + e.scriptsig);
+      const scriptSig = Buffer.from(e.scriptsig, "hex");
       tx_weight += scriptSig.length; //scriptSig -> in bytes
       tx_weight += 4; //sequence -> in bytes
     });
 
     if (tx.vout.length >= 50) {
       //output count -> in bytes
-      throw new Error("Too many outputs");
+      return false;
     }
 
     //output count -> in bytes
@@ -39,7 +47,7 @@ function calculateWeight(tx) {
     tx.vout.forEach((e) => {
       tx_weight += 8; //value -> in bytes
       tx_weight += 1; //scriptPubKey length -> in bytes
-      const scriptPubKey = Buffer.from(e.scriptPubKey, "hex");
+      const scriptPubKey = Buffer.from(e.scriptpubkey, "hex");
       tx_weight += scriptPubKey.length; //scriptPubKey -> in bytes
     });
 
@@ -53,7 +61,7 @@ function calculateWeight(tx) {
 
     if (tx.vin.length >= 50) {
       //input count -> in bytes
-      throw new Error("Too many inputs");
+      return false;
     }
 
     //input count -> in bytes
@@ -64,14 +72,12 @@ function calculateWeight(tx) {
       tx_weight += 32; //txid -> in bytes
       tx_weight += 4; //vout -> in bytes
       tx_weight += 1; //scriptSig length -> in bytes
-      const scriptSig = Buffer.from(e.scriptSig, "hex");
-      tx_weight += scriptSig.length; //scriptSig -> in bytes
       tx_weight += 4; //sequence -> in bytes
     });
 
     if (tx.vout.length >= 50) {
       //output count -> in bytes
-      throw new Error("Too many outputs");
+      return false;
     }
 
     //output count -> in bytes
@@ -81,7 +87,7 @@ function calculateWeight(tx) {
     tx.vout.forEach((e) => {
       tx_weight += 8; //value -> in bytes
       tx_weight += 1; //scriptPubKey length -> in bytes
-      const scriptPubKey = Buffer.from(e.scriptPubKey, "hex");
+      const scriptPubKey = Buffer.from(e.scriptpubkey, "hex");
       tx_weight += scriptPubKey.length; //scriptPubKey -> in bytes
     });
 
