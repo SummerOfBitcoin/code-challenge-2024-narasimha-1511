@@ -10,7 +10,9 @@ function createBlock(merkle_root, nonce) {
   serialize += "01000000"; // Version -> 4 bytes -> Little Endian
   serialize += (0).toString(16).padStart(64, "0"); // Previous Block Hash -> 32 bytes -> Natural byte order
   serialize += merkle_root.match(/../g).reverse().join(""); // Merkle Root -> 32 bytes -> Natural Byte Order
-  const Time = parseInt(Date.now() / 1000) + Math.random() * (3600 - 1) + 1;
+  const Time = parseInt(
+    parseInt(Date.now() / 1000) + Math.random() * (3600 - 1) + 1
+  );
   serialize += Time.toString(16)
     .padStart(8, "0")
     .match(/../g)
