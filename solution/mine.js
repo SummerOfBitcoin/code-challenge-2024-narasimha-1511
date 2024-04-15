@@ -41,13 +41,13 @@ let blockHash = doubleSha256(block).match(/../g).reverse().join("");
 
 while (
   parseInt(blockHash) >=
-  parseInt("00000000000000000000000000000000000000000000000000000000ffff0000")
+  parseInt("0000ffff00000000000000000000000000000000000000000000000000000000")
 ) {
   nonce++;
   console.log(
     parseInt(blockHash) -
       parseInt(
-        "00000000000000000000000000000000000000000000000000000000ffff0000"
+        "0000ffff00000000000000000000000000000000000000000000000000000000"
       )
   );
   console.log("Mining again");
