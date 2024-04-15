@@ -39,9 +39,6 @@ for (let i = 0; i < validTransactions.length; i++) {
   // console.log(validTransactions[i]);
   const { complete_weight, tx_type } = calculateWeight(validTransactions[i]);
   if (tx_type === undefined) continue;
-  if (tx_type === "SEGWIT") {
-    witnessTxs.push(txids[i]);
-  }
   if (complete_weight) {
     if (current_weight + complete_weight <= max_weight) {
       transactions.push(txids[i]);
@@ -54,7 +51,7 @@ for (let i = 0; i < validTransactions.length; i++) {
 let nonce = 0;
 
 // add the witness reserved value in the answer
-let coinbaseTransacton = coinBase(witnessTxs);
+let coinbaseTransacton = coinBase(transactions);
 const coinBaseTxId = doubleSha256(coinbaseTransacton)
   .match(/../g)
   .reverse()
