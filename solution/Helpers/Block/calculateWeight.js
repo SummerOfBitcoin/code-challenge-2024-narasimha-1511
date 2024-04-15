@@ -106,7 +106,7 @@ function calculateWeight(tx) {
   }
 
   const complete_weight = tx_weight * 4 + segwit_wt;
-  return complete_weight;
+  return { complete_weight, tx_type };
 }
 
 function calculateFees(transaction) {

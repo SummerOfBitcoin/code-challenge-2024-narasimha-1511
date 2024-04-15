@@ -31,24 +31,20 @@ for (const key in data) {
   }
 }
 
-
-let coinbaseTransacton = coinBase();
-const coinBaseTxId = doubleSha256(coinbaseTransacton)
-  .match(/../g)
-  .reverse()
-  .join("");
-
 let max_weight = 4 * 1000 * 1000;
 let current_weight = 0;
 let transactions = [];
-transactions.push(coinBaseTxId);
+let witnessTxs = [];
 for (let i = 0; i < validTransactions.length; i++) {
   // console.log(validTransactions[i]);
-  const cur = calculateWeight(validTransactions[i]);
-  if (cur) {
-    if (current_weight + cur <= max_weight) {
+  const { complete_weight, tx_type } = calculateWeight(validTransactions[i]);
+  if (tx_type === "SEGWIT") {
+    witnessTxs.push(txids[i]);
+  }
+  if (complete_weight) {
+    if (current_weight + complete_weight <= max_weight) {
       transactions.push(txids[i]);
-      current_weight += cur;
+      current_weight += complete_weight;
     } else {
       break;
     }
@@ -56,8 +52,17 @@ for (let i = 0; i < validTransactions.length; i++) {
 }
 let nonce = 0;
 
+// add the witness reserved value in the answer
+witnessTxs.unshift((0).toString(16).padStart(64, "0"));
+let coinbaseTransacton = coinBase(witnessTxs);
+const coinBaseTxId = doubleSha256(coinbaseTransacton)
+  .match(/../g)
+  .reverse()
+  .join("");
+
 // console.log(transactions);
 // const merkleRoot = merkle_root(txids);
+transactions.unshift(coinBaseTxId);
 const merkleRoot = merkle_root(transactions);
 let block = createBlock(merkleRoot, nonce);
 
