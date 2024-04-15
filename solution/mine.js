@@ -61,14 +61,14 @@ const coinBaseTxId = doubleSha256(coinbaseTransacton)
 // 2 Line -> Coinbase Transaction
 // 3 Line -> No of transaction ids
 const txidsa = txids.join("\n");
-let blockHash = doubleSha256(block).match(/../g).reverse().join("");
+let blockHash = doubleSha256(block);
 
 while (parseInt(blockHash) >= parseInt("0000ffff")) {
   nonce++;
   console.log(parseInt(blockHash) - parseInt("0000ffff"));
   console.log("Mining again");
   block = createBlock(merkleRoot, nonce);
-  blockHash = doubleSha256(block).match(/../g).reverse().join("");
+  blockHash = doubleSha256(block);
 }
 fs.writeFileSync(
   "output.txt",
