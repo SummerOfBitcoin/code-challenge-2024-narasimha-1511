@@ -55,7 +55,6 @@ for (let i = 0; i < validTransactions.length; i++) {
   }
 }
 let nonce = 0;
-console.log(witnessTxs);
 // add the witness reserved value in the answer
 transactions.unshift((0).toString(16).padStart(64, "0"));
 let coinbaseTransacton = coinBase(witnessTxs);
