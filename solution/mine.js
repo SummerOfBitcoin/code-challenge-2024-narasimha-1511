@@ -5,6 +5,7 @@ import { doubleSha256 } from "./Helpers/Hashes.js";
 import { serializeTxn } from "./Helpers/digests/serialize.js";
 import { coinBase } from "./Helpers/Block/coinBase.js";
 import { calculateWeight } from "./Helpers/Block/calculateWeight.js";
+import { witness_TxId } from "./Helpers/witnessTxId.js";
 
 const validData = fs.readFileSync("valid_transactions_Count.json", "utf8");
 const data = JSON.parse(validData);
@@ -39,6 +40,11 @@ for (let i = 0; i < validTransactions.length; i++) {
   // console.log(validTransactions[i]);
   const { complete_weight, tx_type } = calculateWeight(validTransactions[i]);
   if (tx_type === undefined) continue;
+  if (tx_type === "SEGWIT") {
+    witnessTxs.push(witness_TxId(validTransactions[i]));
+  } else {
+    witnessTxs.push(txids[i]);
+  }
   if (complete_weight) {
     if (current_weight + complete_weight <= max_weight) {
       transactions.push(txids[i]);
@@ -49,10 +55,10 @@ for (let i = 0; i < validTransactions.length; i++) {
   }
 }
 let nonce = 0;
-
+console.log(witnessTxs);
 // add the witness reserved value in the answer
 transactions.unshift((0).toString(16).padStart(64, "0"));
-let coinbaseTransacton = coinBase(transactions);
+let coinbaseTransacton = coinBase(witnessTxs);
 transactions.shift();
 const coinBaseTxId = doubleSha256(coinbaseTransacton)
   .match(/../g)
