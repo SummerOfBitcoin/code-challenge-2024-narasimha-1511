@@ -19,7 +19,7 @@ function witness_TxId(transaction) {
   // Serialize number of inputs must be 1 byte
   serialized += transaction.vin.length.toString(16).padStart(2, "0");
   // Serialize inputs
-  transaction.vin.forEach((input, index) => {
+  transaction.vin.forEach((input) => {
     stack_items = 0; // setting up the stack items
     stack_items_witness = ""; // setting up the stack items witness
 
@@ -27,7 +27,7 @@ function witness_TxId(transaction) {
     serialized += input.txid.match(/../g).reverse().join("");
 
     //setting up the witness field
-    stack_items = (input.witness.length / 2).toString(16).padStart(2, "0");
+    stack_items = input.witness.length.toString(16).padStart(2, "0");
     // Serialize signature length
     input.witness.forEach((witness) => {
       stack_items_witness += (witness.length / 2).toString(16).padStart(2, "0");
@@ -101,6 +101,57 @@ function witness_TxId(transaction) {
   const txid = doubleSha256(serialized).match(/../g).reverse().join("");
 
   return txid;
+}
+
+function diff(tx) {
+  const vincount = tx.slice(12, 14);
+  console.log(vincount);
+
+  for (var i = 0; i < vincount; i++) {
+    const txid = tx.slice(14 + i * 64, 14 + i * 64 + 64);
+    const vout = tx.slice(14 + i * 64 + 64, 14 + i * 64 + 64 + 8);
+    const scriptSigLength = tx.slice(
+      14 + i * 64 + 64 + 8,
+      14 + i * 64 + 64 + 8 + 2
+    );
+    const scriptSig = tx.slice(
+      14 + i * 64 + 64 + 8 + 2,
+      14 + i * 64 + 64 + 8 + 2 + parseInt(scriptSigLength, 16) * 2
+    );
+    const sequence = tx.slice(
+      14 + i * 64 + 64 + 8 + 2 + parseInt(scriptSigLength, 16) * 2,
+      14 + i * 64 + 64 + 8 + 2 + parseInt(scriptSigLength, 16) * 2 + 8
+    );
+    console.log(txid, vout, scriptSig, sequence);
+  }
+
+  const voutcount = tx.slice(14 + vincount * 64, 14 + vincount * 64 + 2);
+
+  console.log(voutcount);
+  for (var i = 0; i < voutcount; i++) {
+    const value = tx.slice(
+      14 + vincount * 64 + 2 + i * 24,
+      14 + vincount * 64 + 2 + i * 24 + 16
+    );
+    const scriptPubKeyLength = tx.slice(
+      14 + vincount * 64 + 2 + i * 24 + 16,
+      14 + vincount * 64 + 2 + i * 24 + 16 + 2
+    );
+    const scriptPubKey = tx.slice(
+      14 + vincount * 64 + 2 + i * 24 + 16 + 2,
+      14 +
+        vincount * 64 +
+        2 +
+        i * 24 +
+        16 +
+        2 +
+        parseInt(scriptPubKeyLength, 16) * 2
+    );
+    console.log(value, scriptPubKey);
+  }
+  const witness = tx.slice(14 + vincount * 64 + voutcount * 24);
+  const locktime = tx.slice(14 + vincount * 64 + voutcount * 24 + 8);
+  console.log(witness, locktime);
 }
 
 export { witness_TxId };

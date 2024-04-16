@@ -2,10 +2,10 @@ function calculateWeight(tx) {
   //here i will calculate the weight of the trasnsaction
 
   //check if the transaction is segwit or not
-  let tx_type = "LEGACY";
+  let tx_type = "SEGWIT";
 
-  if (tx.vin.some((e) => e.scriptsig === "")) {
-    tx_type = "SEGWIT";
+  if (tx.vin.some((e) => e.witness === undefined)) {
+    tx_type = "LEGACY";
   }
 
   //determining the type of the transaction

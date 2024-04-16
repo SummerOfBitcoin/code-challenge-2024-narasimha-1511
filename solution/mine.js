@@ -36,12 +36,17 @@ let max_weight = 4 * 1000 * 1000 - 320;
 let current_weight = 0;
 let transactions = [];
 let witnessTxs = [];
+var z = 3;
 for (let i = 0; i < validTransactions.length; i++) {
   // console.log(validTransactions[i]);
   const { complete_weight, tx_type } = calculateWeight(validTransactions[i]);
   if (tx_type === undefined) continue;
   if (tx_type === "SEGWIT") {
     witnessTxs.push(witness_TxId(validTransactions[i]));
+    if (z != 0) {
+      console.log(witness_TxId(validTransactions[i]), " ", txids[i]);
+      z--;
+    }
   } else {
     witnessTxs.push(txids[i]);
   }
@@ -56,9 +61,9 @@ for (let i = 0; i < validTransactions.length; i++) {
 }
 let nonce = 0;
 // add the witness reserved value in the answer
-transactions.unshift((0).toString(16).padStart(64, "0"));
+witnessTxs.unshift((0).toString(16).padStart(64, "0"));
+fs.writeFileSync("witnessTxs.json", JSON.stringify(witnessTxs));
 let coinbaseTransacton = coinBase(witnessTxs);
-transactions.shift();
 const coinBaseTxId = doubleSha256(coinbaseTransacton)
   .match(/../g)
   .reverse()
