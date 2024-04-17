@@ -59,7 +59,8 @@ function messageDigestp2wpkh(transaction, inputIndex = -1, type = "p2wpkh") {
       .padStart(2, "0");
     serialized += transaction.vin[inputIndex].witness[length - 1];
   }
-  //serialized the input amount
+
+  //seriaserized the input amount
   serialized += transaction.vin[inputIndex].prevout.value
     .toString(16)
     .padStart(16, "0")
@@ -97,7 +98,9 @@ function messageDigestp2wpkh(transaction, inputIndex = -1, type = "p2wpkh") {
     .reverse()
     .join("");
 
-  return serialized + "01000000";
+  serialized += "01000000";
+
+  return doubleSha256(serialized);
 }
 
 export { messageDigestp2wpkh };

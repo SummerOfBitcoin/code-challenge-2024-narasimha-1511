@@ -3,4 +3,3 @@ cd solution
 npm i
 cd ..
 node ./solution/index.js
-node ./solution/mine.js

@@ -1,11 +1,10 @@
 import fs from "fs";
-import pkg from "elliptic";
 import { performance } from "perf_hooks";
-const { ec: EC } = pkg;
 import { ImpelmentCommands } from "./Helpers/ImplementCommands.js";
-import { SHA256, doubleSha256, OP_HASH160 } from "./Helpers/Hashes.js";
+import { SHA256, doubleSha256 } from "./Helpers/Hashes.js";
 import { serializeTxn } from "./Helpers/digests/serialize.js";
 import { messageDigestp2wpkh } from "./Helpers/digests/messageDigestp2wpkh.js";
+import { verifyECDSASignature } from "./Helpers/ecdsa.js";
 import { mine } from "./mine.js";
 
 readAllFilesGetData("mempool");
@@ -28,74 +27,24 @@ function readAllFilesGetData(FolderPath) {
       // valid => { fileName, types } currently types has 1 element
     }
   });
-  let p2sh_valid = 0,
-    p2sht = 0;
-  let p2pkh_valid = 0,
-    p2pkht = 0;
-  let v0_p2wpkh_valid = 0,
-    v0_p2wpkht = 0;
-  let v0_p2wsh_valid = 0,
-    v0_p2wsht = 0;
-  let v1_p2trt = 0,
-    v1_p2tr_valid = 0;
 
   let Data = [];
   ValidData.forEach((e) => {
-    if (e.types == "p2sh") {
-      p2sht++;
-    } else if (e.types == "p2pkh") {
-      p2pkht++;
-    } else if (e.types == "v0_p2wpkh") {
-      v0_p2wpkht++;
-    } else if (e.types == "v0_p2wsh") {
-      v0_p2wsht++;
-    } else if (e.types == "v1_p2tr") {
-      v1_p2trt++;
-    }
-
     if (verifyTransaction(e.fileContent, e.types)) {
       e.serializetx = serializeTxn(e.fileContent).filename;
+
       Data.push(e);
-      if (e.types == "p2sh") {
-        p2sh_valid++;
-      } else if (e.types == "p2pkh") {
-        p2pkh_valid++;
-      } else if (e.types == "v0_p2wpkh") {
-        v0_p2wpkh_valid++;
-      } else if (e.types == "v0_p2wsh") {
-        v0_p2wsh_valid++;
-      } else if (e.types == "v1_p2tr") {
-        v1_p2tr_valid++;
-      }
     }
   });
 
-  // fs.writeFileSync("valid_transactions.txt", JSON.stringify(Data));
-
-  mine(
-    JSON.stringify({
-      Data,
-    })
-  );
+  mine(Data);
 
   // let CountOfTypes = fs.readFileSync("valid_transactions_Count.json", "utf8");
   console.log("----transaction types-----");
   const endTime = performance.now();
   console.log(`Time taken: ${endTime - startTime} ms`);
-  console.log("p2pkh", p2pkh_valid, p2pkht);
-  console.log("p2sh", p2sh_valid, p2sht);
-  console.log("v0_p2wpkh", v0_p2wpkh_valid, v0_p2wpkht);
-  console.log("v0_p2wsh", v0_p2wsh_valid, v0_p2wsht);
-  console.log("v1_p2tr", v1_p2tr_valid, v1_p2trt);
 
   return ValidData;
-}
-
-function getFileName(JsonData) {
-  let serialized = serializeTxn(JsonData);
-  let doubleSha256Hash = doubleSha256(serialized.filename);
-  let file = SHA256(doubleSha256Hash.match(/../g).reverse().join(""));
-  return file;
 }
 
 function isValidFileName(JsonData, fileName) {
@@ -110,34 +59,6 @@ function isValidFileName(JsonData, fileName) {
   return false;
 }
 
-function parseDER(serialized) {
-  // Extract the length of the R element
-  const rLength = parseInt(serialized.substring(6, 8), 16) * 2;
-  // Calculate the start and end positions of R
-  const rStart = 8;
-  const rEnd = rStart + rLength;
-  // Extract R
-  const r = serialized.substring(rStart, rEnd);
-
-  // Extract the length of the S element
-  const sLength = parseInt(serialized.substring(rEnd + 2, rEnd + 4), 16) * 2;
-  // Calculate the start and end positions of S
-  const sStart = rEnd + 4;
-  const sEnd = sStart + sLength;
-  // Extract S
-  const s = serialized.substring(sStart, sEnd);
-  return { r, s };
-}
-
-function verifyECDSASignature(publicKeyHex, signatureHex, messageHex) {
-  // Import the public key
-  const ecdsa = new EC("secp256k1");
-  const key = ecdsa.keyFromPublic(publicKeyHex, "hex");
-  const signature = parseDER(signatureHex);
-  const isValid = key.verify(messageHex, signature);
-  return isValid;
-}
-
 function verifyTransaction(transaction, type) {
   // Assuming 'vin' is an array and we need to check every transaction
 
@@ -145,8 +66,7 @@ function verifyTransaction(transaction, type) {
     let valid = true;
     transaction.vin.forEach((e, index) => {
       const message = messageDigestp2wpkh(transaction, index);
-      const hash = doubleSha256(message);
-      const isValid = verifyECDSASignature(e.witness[1], e.witness[0], hash);
+      const isValid = verifyECDSASignature(e.witness[1], e.witness[0], message);
       if (!isValid) {
         valid = false;
       }
@@ -192,8 +112,7 @@ function verifyTransaction(transaction, type) {
   } else if (type == "v0_p2wsh") {
     let valid = true;
     transaction.vin.forEach((e, index) => {
-      const message = messageDigestp2wpkh(transaction, index, "p2wsh");
-      const messagehash = doubleSha256(message);
+      const messagehash = messageDigestp2wpkh(transaction, index, "p2wsh");
       const getsignatures = e.inner_witnessscript_asm
         .split(" ")[0]
         .split("_")[2];
@@ -205,12 +124,6 @@ function verifyTransaction(transaction, type) {
       commands.forEach((command) => {
         if (command.startsWith("OP_PUSHBYTES_") || command == "OP_0") {
           // Just Leave them as the next bytes will be auto matically pushed
-        } else if (command === "OP_HASH160") {
-          // console.log(commands);
-          valid = false;
-          // let stackElement = stack.pop();
-          // const hash = OP_HASH160(stackElement);
-          // stack.push(hash);
         } else if (command === "OP_EQUAL" || command === "OP_EQUALVERIFY") {
           let stackElement1 = stack.pop();
           let stackElement2 = stack.pop();
@@ -261,8 +174,7 @@ function verifyTransaction(transaction, type) {
   } else if (type == "p2sh") {
     if (transaction.vin[0].witness.length == 2) {
       type = "p2wpkh";
-      const messagedigest = messageDigestp2wpkh(transaction, 0, "p2sh_p2wpkh");
-      const message = doubleSha256(messagedigest);
+      const message = messageDigestp2wpkh(transaction, 0, "p2sh_p2wpkh");
       const signature = transaction.vin[0].witness[0];
       const pubkey = transaction.vin[0].witness[1];
       const valid = verifyECDSASignature(pubkey, signature, message);
@@ -270,4 +182,6 @@ function verifyTransaction(transaction, type) {
     }
     // console.log(transaction.vin[0].witness.length);
   }
+
+  return false;
 }
