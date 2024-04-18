@@ -99,7 +99,6 @@ function messageDigestp2wpkh(transaction, inputIndex = -1, type = "p2wpkh") {
     .join("");
 
   serialized += "01000000";
-
   return doubleSha256(serialized);
 }
 

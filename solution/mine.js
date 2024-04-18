@@ -29,23 +29,25 @@ function mine(data) {
     i++;
   }
 
-  let max_weight = 4 * 1000 * 1000 - 320;
-  let current_weight = 0;
+  let max_weight = 4 * 1000 * 1000;
+  let current_weight = 320;
   let transactions = [];
   let witnessTxs = [];
   for (let i = 0; i < validTransactions.length; i++) {
     // console.log(validTransactions[i]);
-    const { complete_weight, tx_type } = calculateWeight(validTransactions[i]);
+    const { complete_weight: tx_wt, tx_type } = calculateWeight(
+      validTransactions[i]
+    );
     if (tx_type === undefined) continue;
     if (tx_type === "SEGWIT") {
       witnessTxs.push(witness_TxId(validTransactions[i]));
     } else {
       witnessTxs.push(txids[i]);
     }
-    if (complete_weight) {
-      if (current_weight + complete_weight <= max_weight) {
+    if (tx_wt) {
+      if (current_weight + tx_wt <= max_weight) {
         transactions.push(txids[i]);
-        current_weight += complete_weight;
+        current_weight += tx_wt;
       } else {
         break;
       }
@@ -80,7 +82,7 @@ function mine(data) {
     block = createBlock(merkleRoot, nonce);
     blockHash = doubleSha256(block).match(/../g).reverse().join("");
   }
-  console.log("Done");
+
   fs.writeFileSync(
     "output.txt",
     block + "\n" + coinbaseTransacton + "\n" + txidsa

@@ -35,11 +35,8 @@ function coinBase(witnessTxs) {
 
 function witnessCommitment(witnessTxs) {
   const merkle = merkle_root(witnessTxs);
-  const witness_value = Buffer.from(
-    "0000000000000000000000000000000000000000000000000000000000000000",
-    "hex"
-  );
-  const reserved_value = witness_value.toString("hex");
+  const reserved_value =
+    "0000000000000000000000000000000000000000000000000000000000000000";
   return doubleSha256(merkle + reserved_value);
 }
 

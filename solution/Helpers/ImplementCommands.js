@@ -1,19 +1,17 @@
 import { doubleSha256, OP_HASH160 } from "./Hashes.js";
 import { messageDigest } from "./digests/messageDigest.js";
 import { messageDigest_p2sh } from "./digests/messageDigest_p2sh.js";
-import { verifyECDSASignature } from "./ecdsa.js";
-import pkg from "elliptic";
 import { messageDigestp2wpkh } from "./digests/messageDigestp2wpkh.js";
-const { ec: EC } = pkg;
+import { verifyECDSASignature } from "./ecdsa.js";
 
+//a stack will be passed and the commands will be implemented
 function ImpelmentCommands(
   stack,
   commands,
-  type = "p2pkh",
+  type = "p2pkh", //default type is p2pkh
   transaction,
   index
 ) {
-  //a stack will be passed and the commands will be implemented
   commands.forEach((command) => {
     if (
       command.startsWith("OP_PUSHBYTES_") ||
@@ -78,10 +76,7 @@ function ImpelmentCommands(
     } else if (command.startsWith("OP_PUSHNUM")) {
       stack.push(parseInt(command.split("_")[2]));
     } else {
-      if (command.length <= 15) {
-        // console.log(command);
-      }
-      stack.push(command); // Push other commands directly onto the stack
+      stack.push(command); // Push other commands directly onto the stack as they should be data elements
     }
   });
   return stack;

@@ -1,5 +1,4 @@
 import fs from "fs";
-import { performance } from "perf_hooks";
 import { ImpelmentCommands } from "./Helpers/ImplementCommands.js";
 import { SHA256, doubleSha256 } from "./Helpers/Hashes.js";
 import { serializeTxn } from "./Helpers/digests/serialize.js";
@@ -13,8 +12,6 @@ function readAllFilesGetData(FolderPath) {
   //read the valid transactions from the file if file not present keep it empty
   const files = fs.readdirSync(FolderPath); // Reading all the files
   let ValidData = [];
-  let count = 0;
-  const startTime = performance.now();
   files.forEach((fileName) => {
     const filePath = `${FolderPath}/${fileName}`;
     const fileContent = fs.readFileSync(filePath, "utf8");
@@ -32,19 +29,13 @@ function readAllFilesGetData(FolderPath) {
   ValidData.forEach((e) => {
     if (verifyTransaction(e.fileContent, e.types)) {
       e.serializetx = serializeTxn(e.fileContent).filename;
-
       Data.push(e);
     }
   });
 
   mine(Data);
 
-  // let CountOfTypes = fs.readFileSync("valid_transactions_Count.json", "utf8");
-  console.log("----transaction types-----");
-  const endTime = performance.now();
-  console.log(`Time taken: ${endTime - startTime} ms`);
-
-  return ValidData;
+  return true;
 }
 
 function isValidFileName(JsonData, fileName) {
