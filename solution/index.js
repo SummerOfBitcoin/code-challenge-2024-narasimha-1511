@@ -173,6 +173,5 @@ function verifyTransaction(transaction, type) {
     }
     // console.log(transaction.vin[0].witness.length);
   }
-
   return false;
 }

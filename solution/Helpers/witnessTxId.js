@@ -2,7 +2,6 @@ import { doubleSha256 } from "./Hashes.js";
 
 function witness_TxId(transaction) {
   let serialized = "";
-  let type = "";
   let witness = [];
   let stack_items = 0;
   let stack_items_witness = "";
@@ -13,7 +12,7 @@ function witness_TxId(transaction) {
     .match(/../g)
     .reverse()
     .join("");
-  const set = new Set();
+
   serialized += "0001"; // marker + Flag
 
   // Serialize number of inputs must be 1 byte
@@ -60,9 +59,6 @@ function witness_TxId(transaction) {
 
   // Serialize number of outputs
   serialized += transaction.vout.length.toString(16).padStart(2, "0");
-  if (!set.has(type)) {
-    set.add(type);
-  }
 
   // Serialize outputs
   transaction.vout.forEach((output) => {

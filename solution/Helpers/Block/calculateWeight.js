@@ -52,7 +52,7 @@ function calculateWeight(tx) {
 
   if (tx_type === "SEGWIT") {
     //witness -> in bytes
-    segwit_wt += 1; //number of stack items -> in bytes
+    segwit_wt += tx.vin.length; //number of stack items -> in bytes
     tx.vin.forEach((e) => {
       e.witness.forEach((w) => {
         segwit_wt += 1 + w.length / 2; //witness -> in bytes

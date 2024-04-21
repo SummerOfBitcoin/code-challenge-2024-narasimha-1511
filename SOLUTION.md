@@ -46,20 +46,20 @@ code-challenge-2024-narasimha-1511/
 The directory structure described above will now be discussed in terms of its implementation details
 
   ### Table Of Functions
-  - [Verifying Transactions](#index.js)
-  - [ECDSA Verification](#Helpers/ecdsa.js)
-  - [Hashes](#Helpers/hashes.js)
-  - [Implementing Stacks](#Helpers/ImplementCommands.js)
-  - [Serialization](#Helpers/digests/serialize.js)
-  - [Message Digest for P2PKH](#Helpers/digests/messageDigest.js)
-  - [Message Digest for P2SH](#Helpers/digests/messageDigest_p2sh.js)
-  - [Message Digest for P2WPKH, P2SH-P2WPKH, P2WSH](#Helpers/digests/messageDigest_p2wpkh.js)
-  - [Merkle Root](#Helpers/Block/merkleRoot.js)
-  - [Witness Transaction ID](#Helpers/witnessTxID.js)
-  - [Coinbase Transaction](#Helpers/Block/Coinbase.js)
-  - [Calculate Weight](#Helpers/Block/calculateWeight.js)
-  - [Create Block Header](#Helpers/Block/createBlock.js)
-  - [Mining](#mine.js)
+  - [Verifying Transactions](#indexjs)
+  - [ECDSA Verification](#helpersecdsajs)
+  - [Hashes](#helpershashesjs)
+  - [Implementing Stacks](#helpersimplementcommandsjs)
+  - [Serialization](#helpersdigestsserializejs)
+  - [Message Digest for P2PKH](#helpersdigestsmessagedigestjs)
+  - [Message Digest for P2SH](#helpersdigestsmessagedigest_p2shjs)
+  - [Message Digest for P2WPKH, P2SH-P2WPKH, P2WSH](#helpersdigestsmessagedigest_p2wpkhjs)
+  - [Merkle Root](#helpersblockmerklerootjs)
+  - [Witness Transaction ID](#helperswitnesstxidjs)
+  - [Coinbase Transaction](#helpersblockcoinbasejs)
+  - [Calculate Weight](#helpersblockcalculateweightjs)
+  - [Create Block Header](#helpersblockcreateblockjs)
+  - [Mining](#minejs)
   
 
 ###   `index.js` 
@@ -403,24 +403,296 @@ fn messageDigestp2wpkh(transaction, inputIndex, type = "p2wpkh"):
 - The function then calculates the double SHA-256 hash of the serialized data appended with the SIGHASH_ALL flag (represented as "01000000" in hexadecimal) and returns the resulting hash.
 - Reference : [BIP 143: Transaction Signature Verification for Version 0 Witness Program (bips.dev)](https://bips.dev/143/)
 ### `Helpers/Block/merkleRoot.js`
-```javscript
+
+```javascript
+fn merkle_root(txids):
+    // Convert each txid to a Buffer and little Endian
+    hashes = txids.map((txid) =>
+        Buffer.from(txid.match(/../g).reverse().join(""), "hex")
+    )
+    // Continue hashing pairs of hashes until only one hash remains
+    WHILE hashes.length > 1 DO
+        newHashes = []
+        FOR i FROM 0 TO hashes.length BY 2 DO
+            left = hashes[i]
+            right = ""
+            IF i + 1 === hashes.length THEN
+                right = left
+            ELSE
+                right = hashes[i + 1]
+            END IF
+            // Concatenate left and right hashes and hash them together
+            hash = doubleSha256(Buffer.concat([left, right]))
+            newHashes.push(Buffer.from(hash, "hex"))
+        END FOR
+        hashes = newHashes
+    END WHILE
+    // Return the final hash as a hexadecimal string
+    RETURN hashes[0].toString("hex")
 ```
+**Explanation**
+- The `merkle_root` function is used to calculate the Merkle root of a list of transaction ids (`txids`).
+- It first converts each transaction id to a Buffer, litlle Endian (since Bitcoin uses little-endian byte order), and stores it in the `hashes` array.
+- It then repeatedly hashes pairs of hashes (concatenated together) until only one hash remains, which is the Merkle root.
+- The function uses the `doubleSha256` function to compute the hash of concatenated left and right hashes
+- Finally, it returns the Merkle root as a hexadecimal string.
+
 ### `Helpers/witnessTxID.js`
-```javscript
-```
-### `Helpers/Block/Coinbase.js`
-```javscript
-```
-### `Helpers/Block/calculateWeight.js`
-```javscript
-```
-### `Helpers/Block/createBlock.js`
-```javscript
-```
-### `mine.js`
-```javscript
+
+```javascript
+fn witness_TxId(transaction):
+    serialized = "" // Initialize an empty string for serialization
+    witness = []    // Initialize an empty array to store witness data
+    stack_items = 0 // Initialize stack_items counter
+    stack_items_witness = "" // Initialize stack_items_witness string
+
+    serialized += transaction.version
+
+    serialized += "0001"; // Append marker + flag
+    serialized += transaction.vin.length
+
+    // Serialize inputs
+    transaction.vin.forEach((input) => {
+        stack_items = 0; // Reset stack_items for each input
+        stack_items_witness = ""; // Reset stack_items_witness for each input
+
+        serialized += input.txid
+
+        // Serialize witness data
+        stack_items = input.witness.length
+        input.witness.forEach((witnessData) => {
+            stack_items_witness += witnessData.length 
+            stack_items_witness += witnessData;
+        });
+        
+        witness.push(stack_items + stack_items_witness);
+        serialized += input.vout
+        serialized += input.scriptsig.length 
+        serialized += input.scriptsig;
+        serialized += input.sequence
+    });
+
+    // Serialize number of outputs
+    serialized += transaction.vout.length
+
+    // Serialize outputs
+    transaction.vout.forEach((output) => {
+        serialized += output.value
+        serialized += output.scriptpubkey.length 
+        serialized += output.scriptpubkey;
+    });
+
+    serialized += witness.join(""); // Append all witness data to the serialization
+
+    serialized += transaction.locktime
+
+    const Witnesstxid = doubleSha256(serialized).match(/../g).reverse().join("");
+
+    RETURN Witnesstxid; 
 ```
 
+**Explanation**
+- The `witness_TxId` function serializes a Bitcoin transaction with witness data (SegWit) and calculates its transaction id.
+- It first initializes the `serialized` string and an empty array `witness` to store witness data.
+- The function iterates over each input in the transaction, serializing the txid, witness data, vout, scriptSig, and sequence.
+- For witness data, it calculates the length of each witness item and concatenates them together with their respective data.
+- It then serializes the number of outputs, each output's value and scriptPubKey, and finally the locktime.
+- After serializing all inputs and outputs, it concatenates all the witness data to the serialized string.
+- It then double SHA-256 hashes the serialized data and reverses the result to get the transaction id.
+- I have Not Converted data to Little endian as this is psedo code
+
+### `Helpers/Block/Coinbase.js`
+```javascript
+fn coinBase(witnessTxs):
+    coinBase = "" 
+
+    coinBase += "01000000" // Version 
+    coinBase += "00"       // Marker 
+    coinBase += "01"       // Flag 
+
+    // Append input information
+    coinBase += "01" // Number of inputs
+    coinBase += "0000000000000000000000000000000000000000000000000000000000000000" // Previous Transaction Hash 
+    coinBase += "ffffffff" // Previous Txout-index 
+    coinBase += "25" // Txin-script length 
+    coinBase += "246920616d206e61726173696d686120616e64206920616d20736f6c76696e672062697463" // Sig Contains => "$i am narasimha and i am solving bitc"
+    coinBase += "ffffffff" // Sequence 
+    
+    coinBase += "02" // Number of outputs
+    // First Output
+    coinBase += "f595814a00000000" // Hard coded amount for Blockr reward
+    coinBase += "19"               // Txout-script length 
+    coinBase += "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac" 
+
+    // Second Output
+    coinBase += "0000000000000000" // Amount 2 
+    // Create the witness commitment
+    let script = `6a24aa21a9ed${witnessCommitment(witnessTxs)}`;
+    coinBase += script.length  
+    coinBase += script;
+
+    // Append stack items and reserved value
+    coinBase += "0120" // stack items , length of the stack item
+    coinBase += "0000000000000000000000000000000000000000000000000000000000000000" // Reserved value
+    coinBase += "00000000" // Locktime 
+    RETURN coinBase; // Return the coinbase transaction
+
+ fn witnessCommitment(witnessTxs):
+  const merkle = merkle_root(witnessTxs);
+  const reserved_value =
+    "0000000000000000000000000000000000000000000000000000000000000000";
+  return doubleSha256(merkle + reserved_value);
+ 
+```
+
+**Information**.
+- It first initializes an empty string `coinBase` to store the serialized coinbase transaction.
+- The function appends the version, marker, and flag fields to the coinbase.
+- It then appends the input information, including the coinbase data.
+- Next, it appends the output information, including a hardcoded reward for the miner and a  script pub key.
+- The function then calculates the witness commitment by calling the `witnessCommitment` function, which calculates the merkle root of the witness transactions and double SHA-256 hashes it along with a reserved value.
+- Finally, the function appends the witness commitment to the coinbase transaction and returns the serialized coinbase transaction.
+- This coinbase transaction is used as the first transaction in a block and includes the miner's reward as well as the witness commitment for SegWit transactions.
+
+### `Helpers/Block/calculateWeight.js`
+```javascript
+FUNCTION calculateWeight(tx):
+    tx_type = "SEGWIT" // Assume transaction is segwit by default
+
+    // Check if any input is missing witness data, then it's legacy
+    IF ANY input IN tx.vin WHERE input.witness === undefined:
+        tx_type = "LEGACY"
+
+    tx_weight = 0 // Initialize transaction weight
+    segwit_wt = 0 // Initialize segwit weight
+
+    tx_weight += 4 // Version 
+    tx_weight += 1 // Input count 
+    // Iterate over transaction inputs and calculate weight
+    FOR EACH input IN tx.vin:
+        tx_weight += 32 // Txid 
+        tx_weight += 4 // Vout 
+        tx_weight += 1 // scriptSig length
+        tx_weight += input.scriptsig.length // scriptSig 
+        tx_weight += 4 // Sequence 
+    tx_weight += 1 // Output count 
+
+    // Iterate over transaction outputs and calculate weight
+    FOR EACH output IN tx.vout:
+        tx_weight += 8 // Value
+        tx_weight += 1 // scriptPubKey length 
+        tx_weight += output.scriptpubkey.length // scriptPubKey 
+
+    tx_weight += 4 // Locktime 
+
+    IF tx_type === "SEGWIT":
+        segwit_wt += 1 // Number of stack items 
+        // Iterate over transaction inputs and their witnesses to calculate segwit weight
+        FOR EACH input IN tx.vin:
+            FOR EACH witness IN input.witness:
+                segwit_wt += 1 + witness.length // Witness
+
+    // Calculate complete weight including segwit weight
+    complete_weight = tx_weight * 4 + segwit_wt
+
+    RETURN { complete_weight, tx_type }
+
+```
+**Explanation**
+- It  initializes the transaction weight (`tx_weight`) and segwit weight (`segwit_wt`) to zero.
+- The function iterates over the transaction inputs (`vin`) and adds the size of each input to the transaction weight. Each input consists of the transaction ID (`txid`), output index (`vout`), script length, script signature (`scriptsig`), and sequence.
+- It then iterates over the transaction outputs (`vout`) and adds the size of each output to the transaction weight. Each output consists of the value (`value`) and script length of the locking script (`scriptpubkey`).
+- If the transaction is segwit, the function calculates the segwit weight (`segwit_wt`) by adding the size of the witness data for each input.
+- Finally, the function calculates the complete weight by multiplying the transaction weight by 4 (to convert to weight units) and adding the Segwit weight.
+- The function returns an object containing the complete weight and the type of the transaction (`tx_type`), which is either "SEGWIT" or "LEGACY" , this later used while Mining for Coinbase Transaction
+- As this is Pseudo Code I have not Converted them to bytes in this code.
+
+### `Helpers/Block/createBlock.js`
+
+```javascript
+fn createBlock(merkle_root, nonce):
+    block = "" // Initialize an empty string for the block
+
+    block += "11100000" // Version 
+    block += "0000000000000000000000000000000000000000000000000000000000000000" // Previous Block Hash 
+    block += merkle_root 
+    block += Math.floor(Date.now() / 1000);
+    block += "ffff001f" // Target
+    block += nonce
+    
+    RETURN block; // Return the serialized block
+```
+**Explanation**
+- It first initializes an empty string `block` to store the serialized block.
+- The function appends the version, which is hardcoded to "11100000" in little-endian format.
+- It then appends a placeholder for the previous block hash, which is all zeros as this is the genesis block
+- Next, the function appends the provided merkle root, which is the root of the merkle tree of all transactions in the block.
+- The function calculates the current timestamp in seconds since the Unix epoch and appends it to the block header.
+- It appends the bits field, which represents the current target for the block hash, hardcoded as "ffff001f" in little-endian format.
+- Finally, the function appends the nonce, which is a 4-byte value that miners increment in an attempt to find a valid block hash that meets the current target.
+- The function returns the serialized block header, which is used to mine a new block in the blockchain.
+
+### `mine.js`
+```javascript
+fn mine(data):
+    validTransactions = []
+    txids = []
+    
+    // Process transactions
+    for each transaction in data:
+        serialize = serializeTxn(transaction.fileContent)
+        txid = doubleSha256(serialize.filename).reverse().join("")
+        txn = readTransactionFromFile(transaction.fileName)
+        validTransactions.push(txn)
+        txids.push(txid)
+
+    max_weight = 4 * 1000 * 1000
+    current_weight = 320
+    transactions = []
+    witnessTxs = []
+
+    // Select valid transactions
+    for i from 0 to validTransactions.length:
+        tx_wt, tx_type = calculateWeight(validTransactions[i])
+        if tx_type == "SEGWIT":
+            witnessTxs.push(witness_TxId(validTransactions[i]))
+        else:
+            witnessTxs.push(txids[i])
+        if tx_wt and current_weight + tx_wt <= max_weight:
+            transactions.push(txids[i])
+            current_weight += tx_wt
+        else:
+            break
+
+    witnessTxs.unshift("0".padStart(64, "0"))
+    coinbaseTransacton = coinBase(witnessTxs)
+    coinBaseTxId = doubleSha256(coinbaseTransacton).reverse().join("")
+    transactions.unshift(coinBaseTxId)
+    merkleRoot = merkle_root(transactions)
+    block = createBlock(merkleRoot, 0)
+
+    // Mine the block
+    nonce = 0
+    difficulty = "0000ffff00000000000000000000000000000000000000000000000000000000"
+    blockHash = doubleSha256(block).reverse().join("")
+    while blockHash > difficulty:
+        nonce++
+        block = createBlock(merkleRoot, nonce)
+        blockHash = doubleSha256(block).reverse().join("")
+
+    // Write to output file
+    writeToFile("output.txt", block + "\n" + coinbaseTransacton + "\n" + transactions.join("\n"))
+
+```
+
+**Explanation**
+- **Initialization**: It initializes arrays to store valid transactions and their corresponding transaction IDs.
+- **Processing Transactions**: It iterates over the input `data` array, which contains transaction information. For each transaction, it calculates the transaction ID (`txid`) and reads the transaction data from a file in the "mempool" directory. It then adds the transaction to the list of valid transactions and its ID to the list of transaction IDs.
+- **Weight Calculation**: It calculates the weight of each transaction using the `calculateWeight` function and adds the transaction ID to the `transactions` array if its weight does not exceed the maximum weight limit (`max_weight`).
+- **Coinbase Transaction**: It creates the coinbase transaction (`coinbaseTransacton`) using the `coinBase` function and calculates its transaction ID (`coinBaseTxId`).
+- **Merkle Root Calculation**: It calculates the merkle root of the transactions using the `merkle_root` function.
+- **Block Creation**: It continuously increments the nonce value in the block header and calculates the block hash until the hash meets the difficulty target specified by `difficulty`. Once the hash meets the target, it stops and finalizes the block.
+- **Output File**: It writes the block header, coinbase transaction, and list of transaction IDs to an output file named "output.txt".
 
 
 
@@ -430,4 +702,16 @@ Present the results of your solution, and analyze the efficiency of your solutio
   
 
 ## Conclusion:
-Discuss any insights gained from solving the problem, and outline potential areas for future improvement or research. Include a list of references or resources consulted during the problem-solving process.
+Solving the problem of mining a block in a simplified Bitcoin-like blockchain system involves several key insights and areas for improvement:
+
+1. **Transaction Processing:** Understanding how transactions are processed, including serialization, transaction types (legacy or segwit), and weight calculation, is crucial. This insight helps in efficiently selecting transactions for inclusion in the block.
+
+2. **Block Creation:** Creating a block involves constructing the block header, generating the coinbase transaction, calculating the merkle root of the transaction ids, and mining the block by finding a suitable nonce. This process highlights the importance of block validation and consensus rules.
+    
+3. **Mining Difficulty:** The mining process requires finding a block hash that meets a certain difficulty target. This difficulty adjustment mechanism ensures that blocks are mined at a consistent rate, maintaining the security and stability of the blockchain.
+    
+4. **Future Improvement:** Future research could focus on optimizing the transaction selection algorithm to improve block efficiency and reduce processing time. Additionally, exploring more sophisticated mining algorithms or consensus mechanisms could enhance the scalability and security of the blockchain.
+    
+5. **References:** During the problem-solving process, resources such as the Bitcoin whitepaper, blockchain development tutorials, and cryptographic libraries (elliptic,crypto) were consulted to understand the underlying principles and implementation details of blockchain technology.
+
+Overall, solving the problem of block mining provides valuable insights into the complexities of blockchain systems and highlights areas for further research and improvement

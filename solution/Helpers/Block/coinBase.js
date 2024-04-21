@@ -13,11 +13,11 @@ function coinBase(witnessTxs) {
   coinBase += "25"; // Txin-script length -> 1 byte
   coinBase +=
     "246920616d206e61726173696d686120616e64206920616d20736f6c76696e672062697463";
-  // the above is the ascii coding of( I am narasimha and i am solving bitc)
+  // the above is the ascii coding of($i am narasimha and i am solving bitc)
   coinBase += "ffffffff"; // Sequence -> 4 bytes -> Little Endian (Max Value)
   coinBase += "02"; // Number of outputs -> 1 byte
   // First Output
-  coinBase += "f595814a00000000";
+  coinBase += "f595814a00000000"; // Hard coded amount for Blockr reward
   // Amount 1 -> 8 bytes -> Little Endian
   coinBase += "19"; // Txout-script length -> 1 byte
   coinBase += "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"; // random script pub key
@@ -26,7 +26,6 @@ function coinBase(witnessTxs) {
   let script = `6a24aa21a9ed${witnessCommitment(witnessTxs)}`;
   coinBase += (script.length / 2).toString(16); // Txout-script length -> 1 byte
   coinBase += script; // script
-  // Locktime
   coinBase += "0120"; // stack items , length of the stack item
   coinBase +=
     "0000000000000000000000000000000000000000000000000000000000000000";

@@ -30,7 +30,6 @@ function mine(data) {
   let transactions = [];
   let witnessTxs = [];
   for (let i = 0; i < validTransactions.length; i++) {
-    // console.log(validTransactions[i]);
     const { complete_weight: tx_wt, tx_type } = calculateWeight(
       validTransactions[i]
     );
