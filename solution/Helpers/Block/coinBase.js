@@ -2,35 +2,37 @@ import { doubleSha256 } from "../Hashes.js";
 import { merkle_root } from "./merkleroot.js";
 
 function coinBase(witnessTxs) {
-  let serialize = "";
-  serialize += "01000000"; // Version -> 4 bytes -> Little Endian
-  serialize += "00"; // Marker ->  1 byte
-  serialize += "01"; // Flag -> 1 byte
-  serialize += "01"; // Number of inputs -> 1 byte
-  serialize += (0).toString(16).padStart(64, "0"); // Previous Transaction Hash -> 32 bytes -> Little Endian
-  serialize += "ffffffff"; // Previous Txout-index -> 4 bytes -> Little Endian (Max Value)
-  serialize += "25"; // Txin-script length -> 1 byte
-  serialize +=
+  let coinBase = "";
+  coinBase += "01000000"; // Version -> 4 bytes -> Little Endian
+  coinBase += "00"; // Marker ->  1 byte
+  coinBase += "01"; // Flag -> 1 byte
+  coinBase += "01"; // Number of inputs -> 1 byte
+  coinBase +=
+    "0000000000000000000000000000000000000000000000000000000000000000"; // Previous Transaction Hash -> 32 bytes -> Little Endian
+  coinBase += "ffffffff"; // Previous Txout-index -> 4 bytes -> Little Endian (Max Value)
+  coinBase += "25"; // Txin-script length -> 1 byte
+  coinBase +=
     "246920616d206e61726173696d686120616e64206920616d20736f6c76696e672062697463";
   // the above is the ascii coding of( I am narasimha and i am solving bitc)
-  serialize += "ffffffff"; // Sequence -> 4 bytes -> Little Endian (Max Value)
-  serialize += "02"; // Number of outputs -> 1 byte
+  coinBase += "ffffffff"; // Sequence -> 4 bytes -> Little Endian (Max Value)
+  coinBase += "02"; // Number of outputs -> 1 byte
   // First Output
-  serialize += "f595814a00000000";
+  coinBase += "f595814a00000000";
   // Amount 1 -> 8 bytes -> Little Endian
-  serialize += "19"; // Txout-script length -> 1 byte
-  serialize += "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"; // random script pub key
+  coinBase += "19"; // Txout-script length -> 1 byte
+  coinBase += "76a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac"; // random script pub key
   // Second Output
-  serialize += "0000000000000000"; // Amount 2 -> 8 bytes -> Little Endian
+  coinBase += "0000000000000000"; // Amount 2 -> 8 bytes -> Little Endian
   let script = `6a24aa21a9ed${witnessCommitment(witnessTxs)}`;
-  serialize += (script.length / 2).toString(16); // Txout-script length -> 1 byte
-  serialize += script; // script
+  coinBase += (script.length / 2).toString(16); // Txout-script length -> 1 byte
+  coinBase += script; // script
   // Locktime
-  serialize += "0120";
-  serialize += (0).toString(16).padStart(64, "0"); // Locktime -> 4 bytes -> Little Endian
-  serialize += "00000000"; // Locktime -> 4 bytes -> Little Endian
+  coinBase += "0120"; // stack items , length of the stack item
+  coinBase +=
+    "0000000000000000000000000000000000000000000000000000000000000000";
+  coinBase += "00000000"; // Locktime -> 4 bytes -> Little Endian
 
-  return serialize;
+  return coinBase;
 }
 
 function witnessCommitment(witnessTxs) {

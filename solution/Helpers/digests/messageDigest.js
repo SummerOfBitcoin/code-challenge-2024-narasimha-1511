@@ -25,10 +25,8 @@ function messageDigest(transaction, inputIndex = -1) {
       .reverse()
       .join("");
 
-    // Serialize scriptSig length
-    if (index === inputIndex || inputIndex === -1) {
+    if (index === inputIndex) {
       // Serialize scriptSig
-
       serialized += (input.prevout.scriptpubkey.length / 2)
         .toString(16)
         .padStart(2, "0");
@@ -43,8 +41,6 @@ function messageDigest(transaction, inputIndex = -1) {
       .match(/../g)
       .reverse()
       .join("");
-
-    // serialized += input.sequence.toString(16).padStart(4, "0");
   });
 
   // Serialize number of outputs

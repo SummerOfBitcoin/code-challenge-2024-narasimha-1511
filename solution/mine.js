@@ -8,13 +8,11 @@ import { calculateWeight } from "./Helpers/Block/calculateWeight.js";
 import { witness_TxId } from "./Helpers/witnessTxId.js";
 
 function mine(data) {
-  console.log("Start Mining");
+
   let validTransactions = [];
   let txids = [];
-  let i = 0;
   for (const transaction of data) {
     const { fileName, types, fileContent, serializetx } = transaction;
-    //Extracted the files that the valid and verification done
 
     const serialize = serializeTxn(fileContent);
     const txid = doubleSha256(serialize.filename)
@@ -23,10 +21,9 @@ function mine(data) {
       .join("");
     const data = fs.readFileSync("mempool/" + fileName + ".json", "utf8");
     const txn = JSON.parse(data);
-    // console.log(txn);
-    validTransactions[i] = txn;
-    txids[i] = txid;
-    i++;
+
+    validTransactions.push(txn);
+    txids.push(txid);
   }
 
   let max_weight = 4 * 1000 * 1000;
@@ -53,7 +50,6 @@ function mine(data) {
       }
     }
   }
-  let nonce = 0;
   // add the witness reserved value in the answer
   witnessTxs.unshift((0).toString(16).padStart(64, "0"));
   let coinbaseTransacton = coinBase(witnessTxs);
@@ -71,7 +67,7 @@ function mine(data) {
   // 1 Line -> Block Header
   // 2 Line -> Coinbase Transaction
   // 3 Line -> No of transaction ids
-  const txidsa = transactions.join("\n");
+  let nonce = 0;
   const dificulty = Buffer.from(
     "0000ffff00000000000000000000000000000000000000000000000000000000",
     "hex"
@@ -83,9 +79,10 @@ function mine(data) {
     blockHash = doubleSha256(block).match(/../g).reverse().join("");
   }
 
+  const AllTransactioinIdsJoined = transactions.join("\n");
   fs.writeFileSync(
     "output.txt",
-    block + "\n" + coinbaseTransacton + "\n" + txidsa
+    block + "\n" + coinbaseTransacton + "\n" + AllTransactioinIdsJoined
   );
 }
 
