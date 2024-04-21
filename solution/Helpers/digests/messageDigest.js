@@ -25,6 +25,7 @@ function messageDigest(transaction, inputIndex = -1) {
       .reverse()
       .join("");
 
+    // Serialize scriptSig length
     if (index === inputIndex) {
       // Serialize scriptSig
       serialized += (input.prevout.scriptpubkey.length / 2)

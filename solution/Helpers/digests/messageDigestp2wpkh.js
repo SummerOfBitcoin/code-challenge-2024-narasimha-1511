@@ -1,6 +1,6 @@
 import { doubleSha256 } from "../Hashes.js";
 
-function messageDigestp2wpkh(transaction, inputIndex = -1, type = "p2wpkh") {
+function messageDigestp2wpkh(transaction, inputIndex, type = "p2wpkh") {
   // Serialize version (little-endian) must be 4 bytes
   if (transaction.vin.length <= inputIndex) return "";
 

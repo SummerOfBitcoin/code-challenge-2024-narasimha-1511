@@ -8,7 +8,6 @@ import { calculateWeight } from "./Helpers/Block/calculateWeight.js";
 import { witness_TxId } from "./Helpers/witnessTxId.js";
 
 function mine(data) {
-
   let validTransactions = [];
   let txids = [];
   for (const transaction of data) {
@@ -60,7 +59,7 @@ function mine(data) {
 
   transactions.unshift(coinBaseTxId);
   const merkleRoot = merkle_root(transactions);
-  let block = createBlock(merkleRoot, nonce);
+  let block = createBlock(merkleRoot, 0); //Intially Nonce is Zero
 
   //write an output file
   // name: output.txt
