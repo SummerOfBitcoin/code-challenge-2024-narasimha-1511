@@ -1,5 +1,11 @@
 # Solution to the SOB(Summer of Bitcoin) Assingment
 
+## Table Of Contents
+  - [Design Approach](#design-approach)
+  - [Design Overview](#design-overview)
+  - [Implementaion Details](#implementationdetails)
+  - [Results and Performance](#results-and-performance)
+  - [Conclusion](#conclusion)
 ## Design Approach:
 ![Basic Design](images/basic-design.png)
 
@@ -697,9 +703,8 @@ fn mine(data):
 
 
 ## Results and Performance:
-Present the results of your solution, and analyze the efficiency of your solution.
 
-  
+I successfully mined a block containing transactions of types P2PKH, P2SH, P2WPKH, and P2WSH. After all the necessary verifications, including the combined ECDSA signatures, the mining process took roughly 2 minutes or less. The latest block weighed in at 3,722,185 bytes, with a collected fee of 21,018,075 satoshis. I considered including P2TR transactions as well, but I prioritized completing a proposal due to time constraints from communication with organizations and proposal writing.
 
 ## Conclusion:
 Solving the problem of mining a block in a simplified Bitcoin-like blockchain system involves several key insights and areas for improvement:
