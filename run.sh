@@ -1,2 +1,7 @@
 # Update this file to run your own code
-node solution/index.js
+
+cd solution
+npm i
+cd ..
+node ./solution/index.js
+
