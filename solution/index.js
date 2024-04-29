@@ -1,3 +1,4 @@
+
 import fs from "fs";
 import { ImpelmentCommands } from "./Helpers/ImplementCommands.js";
 import { SHA256, doubleSha256 } from "./Helpers/Hashes.js";
@@ -175,3 +176,4 @@ function verifyTransaction(transaction, type) {
   }
   return false;
 }
+
